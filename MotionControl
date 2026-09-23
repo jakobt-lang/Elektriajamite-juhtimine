@@ -1,0 +1,69 @@
+const int motorPin = LED_BUILTIN;
+
+int currentSpeed = 255;  // Vaikimisi sihtkiirus (0 - 255)
+bool isRunning = false;  // Mootori olek
+
+void setup() {
+  pinMode(motorPin, OUTPUT);
+  analogWrite(motorPin, 0); // Alguses seisab
+
+  Serial.begin(9600);
+  while (!Serial) { ; } // Oota jadaühenduse valmisolekut (vajalik nt Leonardo/Micro puhul)
+
+  Serial.println("--- 5VDC Mootori Juhtimine ---");
+  Serial.println("Käsud:");
+  Serial.println("  start      -> Käivitab mootori");
+  Serial.println("  stop       -> Peatab mootori");
+  Serial.println("  0 - 255    -> Seab mootori PWM kiiruse");
+  Serial.println("--------------------------------");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');
+    input.trim(); // Eemalda tühikud ja reavahetused (\r, \n)
+
+    if (input.length() == 0) return;
+
+    if (input.equalsIgnoreCase("start")) {
+      isRunning = true;
+      analogWrite(motorPin, currentSpeed);
+      Serial.print("Mootor käivitatud kiirusel: ");
+      Serial.println(currentSpeed);
+    } 
+    else if (input.equalsIgnoreCase("stop")) {
+      isRunning = false;
+      analogWrite(motorPin, 0);
+      Serial.println("Mootor peatatud.");
+    } 
+    else {
+      // Kontrolli, kas sisestati number
+      bool isNumber = true;
+      for (unsigned int i = 0; i < input.length(); i++) {
+        if (!isDigit(input[i])) {
+          isNumber = false;
+          break;
+        }
+      }
+
+      if (isNumber) {
+        int val = input.toInt();
+        if (val >= 0 && val <= 255) {
+          currentSpeed = val;
+          if (isRunning) {
+            analogWrite(motorPin, currentSpeed);
+            Serial.print("Kiirus muudetud: ");
+            Serial.println(currentSpeed);
+          } else {
+            Serial.print("Kiirus salvestatud (mootor seisab, sisesta 'start'): ");
+            Serial.println(currentSpeed);
+          }
+        } else {
+          Serial.println("Viga: Kiirus peab olema vahemikus 0 kuni 255!");
+        }
+      } else {
+        Serial.println("Tundmatu käsk! Kasuta 'start', 'stop' või arvu 0-255.");
+      }
+    }
+  }
+}
