@@ -1,4 +1,4 @@
-const int motorPin = LED_BUILTIN;
+const int motorPin = 9; //LED_BUILTIN ei saa dimmida ilma tarkvaralise PWM-ta!
 
 int currentSpeed = 255;  // Vaikimisi sihtkiirus (0 - 255)
 bool isRunning = false;  // Mootori olek
